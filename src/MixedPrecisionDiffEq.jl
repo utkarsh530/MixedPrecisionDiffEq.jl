@@ -1,5 +1,7 @@
 module MixedPrecisionDiffEq
 
-greet() = print("Hello World!")
+using OrdinaryDiffEq, DiffEqBase, MacroTools
 
+include("nlsolve.jl")
+export MixedPrecisionNLSolverAlgorithm
 end # module MixedPrecisionDiffEq
