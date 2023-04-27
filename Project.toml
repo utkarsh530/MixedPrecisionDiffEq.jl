@@ -1,0 +1,4 @@
+name = "MixedPrecisionDiffEq"
+uuid = "eb08dc35-7f24-4c65-bdef-909691b8f15f"
+authors = ["Utkarsh <rajpututkarsh530@gmail.com>"]
+version = "0.1.0"
