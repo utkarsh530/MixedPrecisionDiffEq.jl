@@ -44,18 +44,32 @@ mutable struct MixedPrecisionNLSolver{A, iip, NL <: OrdinaryDiffEq.AbstractNLSol
     nlsolverstats::N
 end
 
-function MixedPrecisionNLSolver(current_stage::Int,
-                                nlsolver::OrdinaryDiffEq.AbstractNLSolver{algType, iip},
-                                nlsolverstats::NLSolverStats) where {algType, iip}
-    return MixedPrecisionNLSolver{algType, iip, typeof(nlsolver), typeof(nlsolverstats)}(current_stage,
-                                                                                         nlsolver,
-                                                                                         nlsolverstats)
-end
-
 function OrdinaryDiffEq.build_nlsolver(alg, nlalg::MixedPrecisionNLSolverAlgorithm, u,
-                                       args...)
-    @show u
-    nlsolver = OrdinaryDiffEq.build_nlsolver(alg, nlalg.alg, u, args...)
+                                       uprev, p,
+                                       t, dt,
+                                       f, rate_prototype, ::Type{uEltypeNoUnits},
+                                       ::Type{uBottomEltypeNoUnits}, ::Type{tTypeNoUnits},
+                                       γ, c, α,
+                                       iip) where {uEltypeNoUnits, uBottomEltypeNoUnits,
+                                                   tTypeNoUnits}
+    uBottomEltypeNoUnits_c = Float32
+    uEltypeNoUnits_c = Float32
+    tTypeNoUnits_c = Float32
+    # @show Float32.(f)
+
+    # @show uEltypeNoUnits, uBottomEltypeNoUnits, tTypeNoUnits, typeof(u), typeof(p), typeof(t), typeof(dt), typeof(c), typeof(α)
+    nlsolver = OrdinaryDiffEq.build_nlsolver(alg, nlalg.alg, Float32.(u), Float32.(uprev),
+                                             Float32.(p), Float32.(t), Float32.(dt), f,
+                                             Float32.(rate_prototype),
+                                             uBottomEltypeNoUnits_c,
+                                             uEltypeNoUnits_c, tTypeNoUnits_c, Float32.(γ),
+                                             Float32.(c), Int32.(α),
+                                             iip)
+
+    # nlsolver = OrdinaryDiffEq.build_nlsolver(alg, nlalg.alg, u, uprev,p, t, dt, f,
+    # rate_prototype, uBottomEltypeNoUnits,
+    # uEltypeNoUnits, tTypeNoUnits, γ, c, α,
+    # iip)
     OrdinaryDiffEq.initialize!(nlalg.nlsolverstats)
     return MixedPrecisionNLSolver(1, nlsolver, nlalg.nlsolverstats)
 end
