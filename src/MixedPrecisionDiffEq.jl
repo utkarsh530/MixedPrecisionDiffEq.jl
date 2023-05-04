@@ -1,10 +1,8 @@
 module MixedPrecisionDiffEq
 
-using OrdinaryDiffEq, DiffEqBase, MacroTools, SciMLBase
-using LinearAlgebra, LinearSolve, Setfield
+using SciMLBase, LinearAlgebra, LinearSolve
 
-include("nlsolve.jl")
 include("linsolve.jl")
 include("factorization.jl")
-export MixedPrecisionNLSolverAlgorithm, MixedPrecisionLinsolve, MixedRFLUFactorization
+export MixedPrecisionLinsolve, MixedRFLUFactorization
 end # module MixedPrecisionDiffEq

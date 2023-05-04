@@ -95,19 +95,21 @@ function SciMLBase.solve(cache::LinearSolve.LinearCache, alg::MixedRFLUFactoriza
     SciMLBase.build_linear_solution(alg, y, nothing, cache)
 end
 
-function set_A(cache::LinearSolve.LinearCache{TA, Tb, Tu, Tp, Talg, Tc, Tl, Tr,
-                                              Ttol, issq, condition},
-               A) where {TA, Tb, Tu, Tp, Talg <: MixedRFLUFactorization, Tc, Tl, Tr,
-                         Ttol, issq, condition}
+function LinearSolve.set_A(cache::LinearSolve.LinearCache{TA, Tb, Tu, Tp, Talg, Tc, Tl, Tr,
+                                                          Ttol, issq, condition},
+                           A) where {TA, Tb, Tu, Tp, Talg <: MixedRFLUFactorization, Tc, Tl,
+                                     Tr,
+                                     Ttol, issq, condition}
     cache.A .= A
-    @set! cache.isfresh = true
+    LinearSolve.@set! cache.isfresh = true
     return cache
 end
 
-function set_b(cache::LinearSolve.LinearCache{TA, Tb, Tu, Tp, Talg, Tc, Tl, Tr,
-                                              Ttol, issq, condition},
-               b) where {TA, Tb, Tu, Tp, Talg <: MixedRFLUFactorization, Tc, Tl, Tr,
-                         Ttol, issq, condition}
+function LinearSolve.set_b(cache::LinearSolve.LinearCache{TA, Tb, Tu, Tp, Talg, Tc, Tl, Tr,
+                                                          Ttol, issq, condition},
+                           b) where {TA, Tb, Tu, Tp, Talg <: MixedRFLUFactorization, Tc, Tl,
+                                     Tr,
+                                     Ttol, issq, condition}
     cache.b .= b
     return cache
 end
