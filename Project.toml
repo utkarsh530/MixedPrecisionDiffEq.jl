@@ -14,6 +14,7 @@ Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 [compat]
 ArrayInterface = "7"
 LinearSolve = "1"
+SciMLBase = "1"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
