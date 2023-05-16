@@ -1,5 +1,4 @@
-[![CI](https://github.com/utkarsh530/MixedPrecisionDiffEq.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/utkarsh530/MixedPrecisionDiffEq.jl/actions/workflows/CI.yml)
-
+[![CI](https://github.com/utkarsh530/MixedPrecisionDiffEq.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/utkarsh530/MixedPrecisionDiffEq.jl/actions/workflows/CI.yml) [![codecov](https://codecov.io/gh/utkarsh530/MixedPrecisionDiffEq.jl/branch/main/graph/badge.svg?token=30TQNN2BL6)](https://codecov.io/gh/utkarsh530/MixedPrecisionDiffEq.jl)
 # MixedPrecisionDiffEq.jl
 Mixed Precision ODE solvers in Julia compatible with SciML ecosystem support!
 
