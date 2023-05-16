@@ -1,6 +1,6 @@
 using MixedPrecisionDiffEq, OrdinaryDiffEq, LinearSolve
 
-include(joinpath(dirname(@__DIR__), "bin", "problems", "brusselator.jl"))
+include(joinpath(dirname(@__DIR__), "bin", "problems", "ode", "brusselator.jl"))
 
 prob_brusselator = brusselator(Val(2); xyd_start = 0.0, xyd_stop = 1.0, xyd_length = 16,
                                t_start = 0.0,
