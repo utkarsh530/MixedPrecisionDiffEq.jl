@@ -12,6 +12,9 @@ linalgs = [RFLUFactorization(), FastLUFactorization(), LUFactorization()]
 
 osol = solve(prob_brusselator, TRBDF2(; linsolve = RFLUFactorization()))
 
+osol = solve(prob_brusselator, TRBDF2(; linsolve = MixedRFLUFactorization()))
+
+
 @show osol.stats.nnonliniter
 for linalg in linalgs
     @info linalg
@@ -29,3 +32,6 @@ for linalg in [RFLUFactorization(), LUFactorization()]
     @show sol.stats.nnonliniter
     @test sol.retcode == SciMLBase.ReturnCode.Success
 end
+
+
+
