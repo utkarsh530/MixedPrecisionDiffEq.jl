@@ -117,20 +117,20 @@ function LinearSolve.do_factorization(alg::MixedPrecisionCudaOffloadFactorizatio
         A = A.A
     end
 
-    fact = qr(A)
+    fact = lu(A)
     return fact
 end
 
-# function LinearSolve.init_cacheval(alg::MixedPrecisionCudaOffloadFactorization, A, b, u, Pl, Pr, maxiters::Int,
-#                        abstol, reltol, verbose::Bool, assumptions::LinearSolve.OperatorAssumptions)
-#     ipiv = Vector{LinearAlgebra.BlasInt}(undef, min(size(A)...))
-#     lu_instance(convert(AbstractMatrix, A))
-# end
+function LinearSolve.init_cacheval(alg::MixedPrecisionCudaOffloadFactorization, A, b, u, Pl, Pr, maxiters::Int,
+                       abstol, reltol, verbose::Bool, assumptions::LinearSolve.OperatorAssumptions)
+    ipiv = Vector{LinearAlgebra.BlasInt}(undef, min(size(A)...))
+    lu_instance(convert(AbstractMatrix, A))
+end
 
-# function lu_instance(A::CUDA.CuMatrix{T}) where {T}
-#     noUnitT = typeof(zero(T))
-#     luT = LinearAlgebra.lutype(noUnitT)
-#     ipiv = CUDA.CuArray{Int32}(undef, 0)
-#     info = zero(LinearAlgebra.BlasInt)
-#     return LU{luT}(similar(A,1,1), ipiv, info)
-# end
+function lu_instance(A::CUDA.CuMatrix{T}) where {T}
+    noUnitT = typeof(zero(T))
+    luT = LinearAlgebra.lutype(noUnitT)
+    ipiv = CUDA.CuArray{Int32}(undef, 0)
+    info = zero(LinearAlgebra.BlasInt)
+    return LU{luT}(similar(A,1,1), ipiv, info)
+end
