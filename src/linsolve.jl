@@ -104,9 +104,9 @@ function LinearSolve.set_b(cache::LinearSolve.LinearCache{TA, Tb, Tu, Tp, Talg, 
     return cache
 end
 
-function SciMLBase.solve(cache::LinearSolve.LinearCache, alg::MixedPrecisionLinsolve;
-                         kwargs...)
-    SciMLBase.solve(cache, alg.linalg; kwargs...)
+function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::MixedPrecisionLinsolve;
+                          kwargs...)
+    SciMLBase.solve!(cache, alg.linalg; kwargs...)
 end
 
 # function SciMLBase.solve(cache::MixedPrecisionLinearCache, args...; kwargs...)

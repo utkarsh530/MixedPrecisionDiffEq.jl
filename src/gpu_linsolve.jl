@@ -79,7 +79,6 @@ function LinearSolve.set_A(cache::LinearSolve.LinearCache{TA, Tb, Tu, Tp, Talg, 
                                      Talg <: MixedPrecisionCudaOffloadFactorization, Tc, Tl,
                                      Tr,
                                      Ttol, issq, condition}
-    #cache.A .= A
     copyto!(cache.A, A)
     LinearSolve.@set! cache.isfresh = true
     return cache
@@ -91,7 +90,6 @@ function LinearSolve.set_b(cache::LinearSolve.LinearCache{TA, Tb, Tu, Tp, Talg, 
                                      Talg <: MixedPrecisionCudaOffloadFactorization, Tc, Tl,
                                      Tr,
                                      Ttol, issq, condition}
-    # cache.b .= b
     copyto!(cache.b, b)
     return cache
 end
@@ -104,7 +102,6 @@ function SciMLBase.solve(cache::LinearSolve.LinearCache,
         cache = LinearSolve.set_cacheval(cache, fact)
     end
 
-    # copyto!(cache.u, cache.b)
     cache.u .= Array(ldiv!(cache.cacheval, cache.b))
     SciMLBase.build_linear_solution(alg, cache.u, nothing, cache)
 end
@@ -116,15 +113,19 @@ function LinearSolve.do_factorization(alg::MixedPrecisionCudaOffloadFactorizatio
     if A isa Union{MatrixOperator, DiffEqArrayOperator}
         A = A.A
     end
-
     fact = lu(A)
     return fact
 end
 
-function LinearSolve.init_cacheval(alg::MixedPrecisionCudaOffloadFactorization, A, b, u, Pl, Pr, maxiters::Int,
-                       abstol, reltol, verbose::Bool, assumptions::LinearSolve.OperatorAssumptions)
-    ipiv = Vector{LinearAlgebra.BlasInt}(undef, min(size(A)...))
+function LinearSolve.init_cacheval(alg::MixedPrecisionCudaOffloadFactorization, A, b, u, Pl,
+                                   Pr, maxiters::Int,
+                                   abstol, reltol, verbose::Bool,
+                                   assumptions::LinearSolve.OperatorAssumptions)
     lu_instance(convert(AbstractMatrix, A))
+end
+
+function qr_instance(A::CUDA.CuMatrix{T}) where {T}
+    return qr(similar(A, 1, 1))
 end
 
 function lu_instance(A::CUDA.CuMatrix{T}) where {T}
@@ -132,5 +133,5 @@ function lu_instance(A::CUDA.CuMatrix{T}) where {T}
     luT = LinearAlgebra.lutype(noUnitT)
     ipiv = CUDA.CuArray{Int32}(undef, 0)
     info = zero(LinearAlgebra.BlasInt)
-    return LU{luT}(similar(A,1,1), ipiv, info)
+    return LU{luT}(similar(A, 1, 1), ipiv, info)
 end
