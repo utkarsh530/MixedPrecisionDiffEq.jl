@@ -17,7 +17,6 @@ SciMLNLSolve = "e9a6253c-8580-4d32-9898-8661bb511710"
 [compat]
 ArrayInterface = "7"
 NLsolve = "4"
-LinearSolveCUDA = "0.1"
 CUDA = "4"
 LinearSolve = "1, 2"
 OrdinaryDiffEq = "6"
