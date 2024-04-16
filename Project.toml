@@ -20,6 +20,7 @@ CUDA = "4"
 LinearSolve = "1, 2"
 OrdinaryDiffEq = "6"
 SciMLBase = "1"
+SciMLNLSolve = "0.1"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
