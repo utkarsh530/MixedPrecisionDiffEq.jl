@@ -6,7 +6,7 @@ using Random, BenchmarkTools
 #     Float64.(Float32.(A)\Float32.(b))
 # end
 
-# ns = 2:10:200
+ns = 2:10:200
 
 # times_f32 = Float64[]
 
@@ -29,6 +29,9 @@ data = load("times_linsolve.jld2")
 times_f32 = data["times_f32"]
 times_f64 = data["times_f64"]
 
-plot(ns, times_f64, label = "Linear Solve: Float64", linewidth = 2, marker = :circle)
-plot!(ns, times_f32, label = "Linear Solve: Offload Float32", linewidth = 2,
+plot(ns, times_f64 .* 1000, label = "Linear Solve: Float64", linewidth = 2,
+     marker = :circle, xlabel = "N (size of matrix)", ylabel = "Time (ms)", dpi = 600)
+plot!(ns, times_f32 .* 1000, label = "Linear Solve: Offload Float32", linewidth = 2,
       marker = :circle)
+
+savefig("comparsion_f32_f64_lin_solve.png")

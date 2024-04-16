@@ -1,29 +1,17 @@
-struct MixedPrecisionLinsolve{T <: Real, Tf} <: LinearSolve.SciMLLinearSolveAlgorithm
-    linalg::Tf
+struct MixedPrecisionCudaOffloadFactorization{T <: Real} <:
+       LinearSolve.AbstractFactorization
     precision::Type{T}
 end
 
-function LinearSolve.needs_concrete_A(t::MixedPrecisionLinsolve)
-    LinearSolve.needs_concrete_A(t.linalg)
-end
+MixedPrecisionCudaOffloadFactorization() = MixedPrecisionCudaOffloadFactorization(Float32)
 
-MixedPrecisionLinsolve() = MixedPrecisionLinsolve(RFLUFactorization(), Float32)
-
-function MixedPrecisionLinsolve(linalg::Alg) where {Alg}
-    MixedPrecisionLinsolve(linalg, Float32)
-end
-struct MixedPrecisionLinearCache{Tlc, TA, Tb}
-    linearcache::Tlc
-    Arp::TA
-    brp::Tb
-end
-
-function SciMLBase.init(prob::LinearSolve.LinearProblem, alg::MixedPrecisionLinsolve,
+function SciMLBase.init(prob::LinearSolve.LinearProblem,
+                        alg::MixedPrecisionCudaOffloadFactorization,
                         args...;
                         alias_A = LinearSolve.default_alias_A(alg, prob.A, prob.b),
                         alias_b = LinearSolve.default_alias_b(alg, prob.A, prob.b),
-                        abstol = alg.precision(LinearSolve.default_tol(eltype(prob.A))),
-                        reltol = alg.precision(LinearSolve.default_tol(eltype(prob.A))),
+                        abstol = Float64(LinearSolve.default_tol(eltype(prob.A))),
+                        reltol = Float64(LinearSolve.default_tol(eltype(prob.A))),
                         maxiters::Int = length(prob.b),
                         verbose::Bool = false,
                         Pl = LinearSolve.IdentityOperator(size(prob.A, 1)),
@@ -47,10 +35,10 @@ function SciMLBase.init(prob::LinearSolve.LinearProblem, alg::MixedPrecisionLins
         u0 = similar(b, size(A, 2))
         fill!(u0, false)
     end
-    A = alg.precision.(A)
-    b = alg.precision.(b)
+    A = CUDA.CuArray{alg.precision}(A)
+    b = CUDA.CuArray{alg.precision}(b)
 
-    cacheval = LinearSolve.init_cacheval(alg.linalg, A, b, u0, Pl, Pr, maxiters, abstol,
+    cacheval = LinearSolve.init_cacheval(alg, A, b, u0, Pl, Pr, maxiters, abstol,
                                          reltol, verbose,
                                          assumptions)
     isfresh = true
@@ -87,44 +75,63 @@ end
 
 function LinearSolve.set_A(cache::LinearSolve.LinearCache{TA, Tb, Tu, Tp, Talg, Tc, Tl, Tr,
                                                           Ttol, issq, condition},
-                           A) where {TA, Tb, Tu, Tp, Talg <: MixedPrecisionLinsolve, Tc, Tl,
+                           A) where {TA, Tb, Tu, Tp,
+                                     Talg <: MixedPrecisionCudaOffloadFactorization, Tc, Tl,
                                      Tr,
                                      Ttol, issq, condition}
-    cache.A .= A
+    copyto!(cache.A, A)
     LinearSolve.@set! cache.isfresh = true
     return cache
 end
 
 function LinearSolve.set_b(cache::LinearSolve.LinearCache{TA, Tb, Tu, Tp, Talg, Tc, Tl, Tr,
                                                           Ttol, issq, condition},
-                           b) where {TA, Tb, Tu, Tp, Talg <: MixedPrecisionLinsolve, Tc, Tl,
+                           b) where {TA, Tb, Tu, Tp,
+                                     Talg <: MixedPrecisionCudaOffloadFactorization, Tc, Tl,
                                      Tr,
                                      Ttol, issq, condition}
-    cache.b .= b
+    copyto!(cache.b, b)
     return cache
 end
 
-function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::MixedPrecisionLinsolve;
-                          kwargs...)
-    SciMLBase.solve!(cache, alg.linalg; kwargs...)
+function SciMLBase.solve(cache::LinearSolve.LinearCache,
+                         alg::MixedPrecisionCudaOffloadFactorization;
+                         kwargs...)
+    if cache.isfresh
+        fact = LinearSolve.do_factorization(alg, cache.A, cache.b, cache.u)
+        cache = LinearSolve.set_cacheval(cache, fact)
+    end
+
+    cache.u .= Array(ldiv!(cache.cacheval, cache.b))
+    SciMLBase.build_linear_solution(alg, cache.u, nothing, cache)
 end
 
-# function SciMLBase.solve(cache::MixedPrecisionLinearCache, args...; kwargs...)
-#     solve(cache, cache.alg, args...; kwargs...)
-# end
+function LinearSolve.do_factorization(alg::MixedPrecisionCudaOffloadFactorization, A, b, u)
+    A isa Union{AbstractMatrix, SciMLBase.AbstractSciMLOperator} ||
+        error("LU is not defined for $(typeof(A))")
 
-# function SciMLBase.solve(cache::MixedPrecisionLinearCache, alg::MixedPrecisionLinsolve; kwargs...)
-#     A = cache.linearcache.A
-#     b = cache.linearcache.b
-#     A = convert(AbstractMatrix, A)
-#     fact, ipiv = cache.linearcache.cacheval
-#     ## copy
-#     cache.Arp .= A
-#     cache.brp .= b
-#     if cache.linearcache.isfresh
-#         fact = LinearSolve.RecursiveFactorization.lu!(cache.Arp, ipiv, Val(true), Val(true))
-#         LinearSolve.@set! cache.linearcache = LinearSolve.set_cacheval(cache.linearcache, (fact, ipiv))
-#     end
-#     y = ldiv!(cache.linearcache.u, cache.linearcache.cacheval[1], cache.brp)
-#     SciMLBase.build_linear_solution(alg, y, nothing, cache)
-# end
+    if A isa Union{MatrixOperator, DiffEqArrayOperator}
+        A = A.A
+    end
+    fact = lu(A)
+    return fact
+end
+
+function LinearSolve.init_cacheval(alg::MixedPrecisionCudaOffloadFactorization, A, b, u, Pl,
+                                   Pr, maxiters::Int,
+                                   abstol, reltol, verbose::Bool,
+                                   assumptions::LinearSolve.OperatorAssumptions)
+    lu_instance(convert(AbstractMatrix, A))
+end
+
+function qr_instance(A::CUDA.CuMatrix{T}) where {T}
+    return qr(similar(A, 1, 1))
+end
+
+function lu_instance(A::CUDA.CuMatrix{T}) where {T}
+    noUnitT = typeof(zero(T))
+    luT = LinearAlgebra.lutype(noUnitT)
+    ipiv = CUDA.CuArray{Int32}(undef, 0)
+    info = zero(LinearAlgebra.BlasInt)
+    return LU{luT}(similar(A, 1, 1), ipiv, info)
+end
