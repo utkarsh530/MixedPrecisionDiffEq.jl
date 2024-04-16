@@ -1,7 +1,7 @@
 name = "MixedPrecisionDiffEq"
 uuid = "eb08dc35-7f24-4c65-bdef-909691b8f15f"
 authors = ["Utkarsh <rajpututkarsh530@gmail.com>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
@@ -17,8 +17,11 @@ SciMLNLSolve = "e9a6253c-8580-4d32-9898-8661bb511710"
 [compat]
 ArrayInterface = "7"
 LinearSolve = "1"
-NonlinearSolve = "1"
+CUDA = "4"
+LinearSolve = "1, 2"
+OrdinaryDiffEq = "6"
 SciMLBase = "1"
+SciMLNLSolve = "0.1"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"

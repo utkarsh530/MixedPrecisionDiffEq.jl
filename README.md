@@ -60,7 +60,7 @@ sol = solve(prob, TRBDF2(;linsolve = MixedPrecisionLinsolve()))
 
 ## GPU acceleration of linear solve with mixed precision
 
-The use GPU acceleration, run:
+To use GPU acceleration, run:
 
 ```julia
 
